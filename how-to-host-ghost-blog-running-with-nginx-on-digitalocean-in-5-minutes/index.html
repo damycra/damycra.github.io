@@ -101,7 +101,7 @@ Line 66 starts a Docker container from the Nginx image, calls it <em>nginx</em> 
 
 <h3 id="appendix">Appendix</h3>
 
-<p><strong>Server restarts</strong> Turns out that if the droplet reboots, Docker may not restart your containers. It's easy enough to <code>docker start ghost nginx</code> but better to do it automatically. We can tell docker not to restart containers and get upstart to manage them instead:</p>
+<p><strong>Server restarts</strong> Turns out that if the droplet reboots, Docker may not restart your containers. It's easy enough to <code>docker start ghost nginx</code> but better to do it automatically. We can tell Docker <a href="http://docs.docker.com/articles/host_integration/">not to restart containers and get upstart to manage them</a> instead:</p>
 
 <script src="https://gist.github.com/damycra/8b558a5cc5140389182f.js"></script>
         </section>
