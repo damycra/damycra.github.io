@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <title>How to host your Ghost Blog behind Nginx using Docker containers, in 5 minutes</title>
+    <meta name="description" content="" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="shortcut icon" href="../favicon.ico">
+
+    <link rel="stylesheet" type="text/css" href="../assets/css/screen.css?v=801859a22b" />
+    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=PT+Serif:400,700,400italic|Open+Sans:700,400" />
+
+    <meta name="generator" content="Ghost 0.5" />
+<link rel="alternate" type="application/rss+xml" title="Notes" href="../rss/index.html">
+<link rel="canonical" href="http://notes.damycra.com/how-to-host-ghost-blog-running-with-nginx-on-digitalocean-in-5-minutes/" />
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-34879874-3', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+</head>
+<body class="post-template tag-docker">
+
+    
+
+<nav class="main-nav clearfix">
+    <a class="back-button icon-arrow-left" href="http://notes.damycra.com">Home</a>
+    <a class="subscribe-button icon-feed" href="http://notes.damycra.com/rss/">Subscribe</a>
+</nav>
+
+<main class="content" role="main">
+
+    <article class="post tag-docker">
+
+        <header class="post-header">
+            <h1 class="post-title">How to host your Ghost Blog behind Nginx using Docker containers, in 5 minutes</h1>
+            <section class="post-meta">
+                <time class="post-date" datetime="2014-10-23">23 October 2014</time>  on <a href="../tag/docker/index.html">docker </a>
+            </section>
+        </header>
+
+        <section class="post-content">
+            <p><em>(OK, maybe 10 minutes if you need to set up a DigitalOcean account first)</em></p>
+
+<p>Those nice folks at <a href="https://www.digitalocean.com/">Digital Ocean</a> (<a href="https://www.digitalocean.com/?refcode=7f4a8472db57">referral link</a>) can provide SSD backed virtual servers quickly and at low cost ($5 per month for the basic option), AND they can also provision them for you with apps already setup (including Ghost or Docker), all in around 60 seconds. <a href="https://www.docker.com/whatisdocker/">Docker</a> has been the cool new thing in devops/sysadmin circles for at least a year and I have chosen the beautiful <a href="https://ghost.org/">Ghost blogging platform</a> to author my ramblings so I figured that this trinity should be brought together.</p>
+
+<p>First, create your 'droplet' by:</p>
+
+<ol>
+<li>Giving it a name  </li>
+<li>Choosing the size ($5)  </li>
+<li>Selecting the region you want  </li>
+<li>Under Select Image, choose the Applications tab and then Docker  </li>
+<li>Choose your SSH key if you want to use one  </li>
+<li>Hit Create Droplet</li>
+</ol>
+
+<p><img src="../content/images/2014/Oct/do.png" alt="" /></p>
+
+<p>Second, wait 60 seconds for provisioning then SSH into your server (from a terminal on your Mac, <code>ssh root@&lt;your-droplet-public-ip-address&gt;</code>).</p>
+
+<p>Third, run the below commands in order... </p>
+
+<p><strong>N.B.</strong>
+Enter your own URL at line 18 (or you could enter the IP address of the server instead).</p>
+
+<script src="https://gist.github.com/damycra/b63b682003c03d58d98d.js"></script>
+
+<noscript>  
+<p>See script at: [gist](https://gist.github.com/damycra/b63b682003c03d58d98d)</p>  
+</noscript>
+
+<p>... And you have a working Ghost blog on the interwebs. Visit <code>http://&lt;your-droplet-public-ip-address&gt;/ghost/</code> to configure an admin user. </p>
+
+<h3 id="whatsgoingon">What's going on?</h3>
+
+<p>Lines 1–3 create directories we use later <br />
+Lines 5–39 provides a minimal Ghost <a href="http://support.ghost.org/config/"><code>config.js</code></a> to run the blog in production mode and puts it in <code>/var/ghost</code> <br />
+Lines 41–61 sets up a basic Nginx server configuration <br />
+Lines 63 &amp; 64 <a href="http://docs.docker.com/reference/commandline/cli/#pull">pull</a> Docker images for <a href="https://registry.hub.docker.com/u/dockerfile/ghost/">Ghost</a> and <a href="https://registry.hub.docker.com/u/dockerfile/nginx/">Nginx</a> from from the Docker Hub <br />
+Line 65 <a href="https://docs.docker.com/reference/run/">starts</a> a Docker <em>container</em> from the Ghost image, names it <em>ghost</em> and maps <code>/var/ghost</code> on our Droplet with <code>/ghost-override</code> in the <em>container</em> <br />
+Line 66 starts a Docker container from the Nginx image, calls it <em>nginx</em> and maps the other directories we created into the container. It also <a href="https://docs.docker.com/userguide/dockerlinks/">links</a> the <em>nginx</em> container to the <em>ghost</em> container — this means that nginx gets environment variables with details about the <em>ghost</em> container, and also gets an entry in <code>/etc/hosts</code>. This latter fact allows us to specify the name <em>ghost</em> in line 57.</p>
+
+<h3 id="sowhat">So what?</h3>
+
+<p>We could just as easily have installed Nginx on the Droplet in the first place (and installing Ghost would not have been too difficult, either, assuming we did not want to use the Ghost application image from Digital Ocean) so why do this? </p>
+
+<p>Well, partly because we can but mainly for the incredible flexibility we get. Setting up a new Ghost blog for Aunt Mabel suddenly becomes much easier, for instance, as does trying out the next version with minimal concerns about affecting the current setup on the host server (we do need to be careful to map a different directory into the new container, <code>/var/ghost_tryout</code> perhaps). That applies to Ghost or any other software that we might be interested in spinning up and trying out without leaving any cruft behind when we're finished. And moving to another VPS provider is that bit easier, too.</p>
+
+<h3 id="appendix">Appendix</h3>
+
+<p><strong>Server restarts</strong> Turns out that if the droplet reboots, Docker may not restart your containers. It's easy enough to <code>docker start ghost nginx</code> but better to do it automatically. We can tell docker not to restart containers and get upstart to manage them instead:</p>
+
+<script src="https://gist.github.com/damycra/8b558a5cc5140389182f.js"></script>
+        </section>
+
+        <section class="comment">
+            <div class="g-comments" data-href="http://notes.damycra.com/how-to-host-ghost-blog-running-with-nginx-on-digitalocean-in-5-minutes/" data-first_party_property="BLOGGER" data-view_type="FILTERED_POSTMOD">Loading Google+ Comments ...</div>
+            <script async type="text/javascript" src="http://apis.google.com/js/plusone.js?callback=gpcb"></script>
+            <noscript>Please enable JavaScript to view the <a href="https://plus.google.com/">comments powered by Google+.</a></noscript>
+        </section>
+
+        <footer class="post-footer">
+
+
+
+            <section class="author">
+                <h4><a href="../author/steven-davidson/index.html">Steven Davidson</a></h4>
+
+                    <p>Read <a href="../author/steven-davidson/index.html">more posts</a> by this author.</p>
+                <div class="author-meta">
+                    
+                    <span class="author-link icon-link"><a href="https://twitter.com/damycra">https://twitter.com/damycra</a></span>
+                </div>
+            </section>
+
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="https://twitter.com/share?text=How%20to%20host%20your%20Ghost%20Blog%20behind%20Nginx%20using%20Docker%20containers%2C%20in%205%20minutes&amp;url=http://notes.damycra.com/how-to-host-ghost-blog-running-with-nginx-on-digitalocean-in-5-minutes/"
+                    onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://notes.damycra.com/how-to-host-ghost-blog-running-with-nginx-on-digitalocean-in-5-minutes/"
+                    onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=http://notes.damycra.com/how-to-host-ghost-blog-running-with-nginx-on-digitalocean-in-5-minutes/"
+                   onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+        </footer>
+
+    </article>
+
+</main>
+
+
+    <footer class="site-footer clearfix">
+         <section class="copyright"><a href="http://notes.damycra.com">Notes</a> &copy; 2014 All rights reserved</section>
+         <section class="poweredby">Proudly published with <a href="https://ghost.org">Ghost</a> &amp; <a href="https://github.com/axitkhurana/buster/">Buster</a></section>
+    </footer>
+
+    <script src="../public/jquery.js?v=801859a22b"></script>
+
+    <script type="text/javascript" src="../assets/js/jquery.fitvids.js?v=801859a22b"></script>
+    <script type="text/javascript" src="../assets/js/index.js?v=801859a22b"></script>
+
+</body>
+</html>
